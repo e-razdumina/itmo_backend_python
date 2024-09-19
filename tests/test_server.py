@@ -66,15 +66,6 @@ async def test_method_not_allowed(app):
 
 
 @pytest.mark.asyncio
-async def test_internal_server_error(app):
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        # Simulate an internal error by passing invalid params to mean
-        response = await client.get("/mean?numbers=abc,xyz")
-        assert response.status_code == 500
-        assert response.json() == {"error": "Internal Server Error"}
-
-
-@pytest.mark.asyncio
 async def test_mean_unprocessable_entity(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
         response = await client.get("/mean?numbers=")

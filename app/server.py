@@ -77,7 +77,7 @@ class ServerApp:
                 response_body = {"mean": mean_result}
                 await self.send_response(send, response_body)
         except ValueError:
-            await self.bad_request(send)
+            await self.unprocessable_entity(send)
         except Exception:
             await self.internal_server_error(send)
 
