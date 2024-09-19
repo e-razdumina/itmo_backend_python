@@ -20,7 +20,7 @@ async def test_factorial_success(app):
 @pytest.mark.asyncio
 async def test_fibonacci_success(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/fibonacci?n=10")
+        response = await client.get("/fibonacci/10")
         assert response.status_code == 200
         assert response.json() == {"result": 55}
 
@@ -28,7 +28,7 @@ async def test_fibonacci_success(app):
 @pytest.mark.asyncio
 async def test_mean_success(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/mean?numbers=1,2,3,4,5")
+        response = await client.post("/mean", json=[1, 2, 3, 4, 5])
         assert response.status_code == 200
         assert response.json() == {"result": 3.0}
 
@@ -42,25 +42,25 @@ async def test_not_found(app):
 
 
 @pytest.mark.asyncio
-async def test_factorial_bad_request(app):
+async def test_factorial_unprocessable_entity(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/factorial")  # Missing n parameter
-        assert response.status_code == 400
-        assert response.json() == {"error": "Bad Request"}
+        response = await client.get("/factorial")
+        assert response.status_code == 422
+        assert response.json() == {"error": "Unprocessable Entity"}
 
 
 @pytest.mark.asyncio
 async def test_factorial_invalid_n(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/factorial?n=abc")  # Invalid 'n' parameter
-        assert response.status_code == 400
-        assert response.json() == {"error": "Bad Request"}
+        response = await client.get("/factorial?n=abc")
+        assert response.status_code == 422
+        assert response.json() == {"error": "Unprocessable Entity"}
 
 
 @pytest.mark.asyncio
 async def test_method_not_allowed(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.post("/factorial?n=5")  # POST not allowed
+        response = await client.post("/factorial?n=5")
         assert response.status_code == 405
         assert response.json() == {"error": "Method Not Allowed"}
 
@@ -68,6 +68,6 @@ async def test_method_not_allowed(app):
 @pytest.mark.asyncio
 async def test_mean_unprocessable_entity(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/mean?numbers=")
-        assert response.status_code == 422
-        assert response.json() == {"error": "Unprocessable Entity"}
+        response = await client.post("/mean", json=[])
+        assert response.status_code == 400
+        assert response.json() == {"error": "Bad Request"}

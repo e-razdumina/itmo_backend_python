@@ -26,7 +26,7 @@ class ServerApp:
             if method in self.routes:
                 if path in self.routes[method]:
                     handler = self.routes[method][path]
-                    await handler(scope, params, send)
+                    await handler(scope, params, receive, send)  # Pass 'receive'
                 else:
                     await self.not_found(send)
             else:
@@ -35,7 +35,7 @@ class ServerApp:
         except Exception as e:
             await self.internal_server_error(send, str(e))
 
-    async def factorial(self, scope: Dict[str, Any], params: Dict[str, Any], send: Callable) -> None:
+    async def factorial(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
             n = params.get("n", [None])[0]
             if n is None:
@@ -51,7 +51,7 @@ class ServerApp:
         except Exception:
             await self.internal_server_error(send)
 
-    async def fibonacci(self, scope: Dict[str, Any], params: Dict[str, Any], send: Callable) -> None:
+    async def fibonacci(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
             path = scope["path"]
             n_str = path.split("/fibonacci/")[-1]
@@ -69,9 +69,9 @@ class ServerApp:
         except Exception:
             await self.internal_server_error(send)
 
-    async def mean(self, scope: Dict[str, Any], params: Dict[str, Any], send: Callable) -> None:
+    async def mean(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
-            body = await self.get_request_body(receive)
+            body = await self.get_request_body(receive)  # Pass 'receive'
             if not isinstance(body, list) or not all(isinstance(i, (float, int)) for i in body):
                 await self.unprocessable_entity(send)
                 return
