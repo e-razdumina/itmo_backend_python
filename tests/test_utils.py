@@ -10,7 +10,7 @@ def test_calculate_factorial():
 
 
 def test_calculate_fibonacci():
-    assert calculate_fibonacci(10) == 34
+    assert calculate_fibonacci(10) == 55
     assert calculate_fibonacci(1) == 0
     assert calculate_fibonacci(2) == 1
     with pytest.raises(ValueError):

@@ -37,10 +37,10 @@ class ServerApp:
 
     async def factorial(self, scope: Dict[str, Any], params: Dict[str, Any], send: Callable) -> None:
         try:
-            n = int(params.get("n", [None])[0])
+            n = params.get("n", [None])[0]
             if n is None:
                 raise ValueError("Missing 'n' parameter")
-
+            n = int(n)
             factorial_result = calculate_factorial(n)
             response_body = {"factorial": factorial_result}
             await self.send_response(send, response_body)
