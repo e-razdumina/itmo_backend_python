@@ -25,7 +25,7 @@ def calculate_fibonacci(n: int) -> int:
     Returns:
         int: The n-th Fibonacci number.
     """
-    if n <= 0:
+    if n < 0:
         raise ValueError("n should be a positive integer")
 
     phi = (1 + math.sqrt(5)) / 2

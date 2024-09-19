@@ -14,7 +14,7 @@ def test_calculate_fibonacci():
     assert calculate_fibonacci(0) == 0
     assert calculate_fibonacci(2) == 1
     with pytest.raises(ValueError):
-        calculate_fibonacci(0)
+        calculate_fibonacci(-1)
 
 
 def test_calculate_mean():
