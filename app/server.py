@@ -41,45 +41,59 @@ class ServerApp:
             if n is None:
                 raise ValueError("Missing 'n' parameter")
             n = int(n)
+            if n < 0:
+                raise ValueError("n must be a non-negative integer")
             factorial_result = calculate_factorial(n)
             response_body = {"result": factorial_result}
             await self.send_response(send, response_body)
         except ValueError:
-            await self.bad_request(send)
+            await self.unprocessable_entity(send)
         except Exception:
             await self.internal_server_error(send)
 
     async def fibonacci(self, scope: Dict[str, Any], params: Dict[str, Any], send: Callable) -> None:
         try:
-            n = int(params.get("n", [None])[0])
-            if n is None:
-                raise ValueError("Missing 'n' parameter")
+            path = scope["path"]
+            n_str = path.split("/fibonacci/")[-1]
+            if not n_str.isdigit():
+                raise ValueError("Invalid path parameter 'n'")
+            n = int(n_str)
+            if n < 0:
+                raise ValueError("n must be a non-negative integer")
 
             fibonacci_result = calculate_fibonacci(n)
             response_body = {"result": fibonacci_result}
             await self.send_response(send, response_body)
         except ValueError:
-            await self.bad_request(send)
+            await self.unprocessable_entity(send)
         except Exception:
             await self.internal_server_error(send)
 
     async def mean(self, scope: Dict[str, Any], params: Dict[str, Any], send: Callable) -> None:
         try:
-            numbers_str = params.get("numbers", [None])[0]
-            if numbers_str is None:
-                raise ValueError("Missing 'numbers' parameter")
-
-            numbers = list(map(float, numbers_str.split(',')))
-            if len(numbers) == 0:
+            body = await self.get_request_body(receive)
+            if not isinstance(body, list) or not all(isinstance(i, (float, int)) for i in body):
                 await self.unprocessable_entity(send)
-            else:
-                mean_result = calculate_mean(numbers)
-                response_body = {"result": mean_result}
-                await self.send_response(send, response_body)
-        except ValueError:
-            await self.unprocessable_entity(send)
+                return
+
+            if len(body) == 0:
+                await self.bad_request(send)
+                return
+
+            mean_result = calculate_mean(body)
+            response_body = {"result": mean_result}
+            await self.send_response(send, response_body)
         except Exception:
             await self.internal_server_error(send)
+
+    async def get_request_body(self, receive: Callable) -> Any:
+        body = b""
+        more_body = True
+        while more_body:
+            message = await receive()
+            body += message.get("body", b"")
+            more_body = message.get("more_body", False)
+        return json.loads(body)
 
     async def send_response(self, send: Callable, body: Dict[str, Any], status_code: int = 200) -> None:
         body_bytes = json.dumps(body).encode("utf-8")
