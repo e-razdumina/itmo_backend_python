@@ -14,7 +14,7 @@ async def test_factorial_success(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
         response = await client.get("/factorial?n=5")
         assert response.status_code == 200
-        assert response.json() == {"factorial": 120}
+        assert response.json() == {"result": 120}
 
 
 @pytest.mark.asyncio
@@ -22,7 +22,7 @@ async def test_fibonacci_success(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
         response = await client.get("/fibonacci?n=10")
         assert response.status_code == 200
-        assert response.json() == {"fibonacci": 55}
+        assert response.json() == {"result": 55}
 
 
 @pytest.mark.asyncio
@@ -30,7 +30,7 @@ async def test_mean_success(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
         response = await client.get("/mean?numbers=1,2,3,4,5")
         assert response.status_code == 200
-        assert response.json() == {"mean": 3.0}
+        assert response.json() == {"result": 3.0}
 
 
 @pytest.mark.asyncio
