@@ -1,4 +1,5 @@
 import pytest
+
 from app.utils import calculate_factorial, calculate_fibonacci, calculate_mean
 
 

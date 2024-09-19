@@ -1,6 +1,7 @@
 import pytest
-from app import ServerApp
 from httpx import AsyncClient
+
+from app import ServerApp
 
 
 @pytest.fixture
