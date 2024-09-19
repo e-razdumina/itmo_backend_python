@@ -35,7 +35,7 @@ jobs:
           pytest -m "not api"
 
       - name: Set up Docker Compose for API tests
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Wait for the app to be ready
         run: |
@@ -49,4 +49,4 @@ jobs:
           pytest -m "api"
 
       - name: Tear down Docker Compose
-        run: docker-compose down
+        run: docker compose down
