@@ -13,3 +13,9 @@ This project implements a simple ASGI application with `uvicorn` that includes b
   - 405 Method Not Allowed
   - 500 Internal Server Error
 
+## Run
+
+To run the application using Docker, simply use the following command:
+
+```bash
+make run
