@@ -22,7 +22,7 @@ async def test_fibonacci_success(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
         response = await client.get("/fibonacci?n=10")
         assert response.status_code == 200
-        assert response.json() == {"fibonacci": 34}
+        assert response.json() == {"fibonacci": 55}
 
 
 @pytest.mark.asyncio

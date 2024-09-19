@@ -70,9 +70,12 @@ class ServerApp:
                 raise ValueError("Missing 'numbers' parameter")
 
             numbers = list(map(float, numbers_str.split(',')))
-            mean_result = calculate_mean(numbers)
-            response_body = {"mean": mean_result}
-            await self.send_response(send, response_body)
+            if len(numbers) == 0:
+                await self.unprocessable_entity(send)
+            else:
+                mean_result = calculate_mean(numbers)
+                response_body = {"mean": mean_result}
+                await self.send_response(send, response_body)
         except ValueError:
             await self.bad_request(send)
         except Exception:
