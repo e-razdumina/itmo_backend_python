@@ -42,7 +42,7 @@ class ServerApp:
                 raise ValueError("Missing 'n' parameter")
             n = int(n)
             factorial_result = calculate_factorial(n)
-            response_body = {"factorial": factorial_result}
+            response_body = {"result": factorial_result}
             await self.send_response(send, response_body)
         except ValueError:
             await self.bad_request(send)
@@ -56,7 +56,7 @@ class ServerApp:
                 raise ValueError("Missing 'n' parameter")
 
             fibonacci_result = calculate_fibonacci(n)
-            response_body = {"fibonacci": fibonacci_result}
+            response_body = {"result": fibonacci_result}
             await self.send_response(send, response_body)
         except ValueError:
             await self.bad_request(send)
@@ -74,7 +74,7 @@ class ServerApp:
                 await self.unprocessable_entity(send)
             else:
                 mean_result = calculate_mean(numbers)
-                response_body = {"mean": mean_result}
+                response_body = {"result": mean_result}
                 await self.send_response(send, response_body)
         except ValueError:
             await self.unprocessable_entity(send)
