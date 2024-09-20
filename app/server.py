@@ -39,11 +39,17 @@ class ServerApp:
 
     async def factorial(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
-            n = params.get("n", [None])[0]
-            if n is None or not n.isdigit():
+            n_str = params.get("n", [None])[0]
+            if n_str is None:
                 await self.unprocessable_entity(send)
                 return
-            n = int(n)
+
+            try:
+                n = int(n_str)
+            except ValueError:
+                await self.unprocessable_entity(send)
+                return
+
             if n < 0:
                 await self.bad_request(send)
                 return
@@ -57,10 +63,13 @@ class ServerApp:
         try:
             path = scope["path"]
             n_str = path.split("/fibonacci/")[-1]
-            if not n_str.isdigit():
+
+            try:
+                n = int(n_str)
+            except ValueError:
                 await self.unprocessable_entity(send)
                 return
-            n = int(n_str)
+
             if n < 0:
                 await self.bad_request(send)
                 return
@@ -73,17 +82,21 @@ class ServerApp:
 
     async def mean(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
-            numbers_str = params.get("numbers", [None])[0]
-            if numbers_str is None or numbers_str == "":
-                await self.unprocessable_entity(send)  # Missing or empty 'numbers'
+            body = await self.get_request_body(receive)
+
+            if not isinstance(body, list):
+                await self.unprocessable_entity(send)
                 return
 
-            numbers = list(map(float, numbers_str.split(',')))
-            if len(numbers) == 0:
+            if len(body) == 0:
                 await self.bad_request(send)
                 return
 
-            mean_result = calculate_mean(numbers)
+            if not all(isinstance(num, (float, int)) for num in body):
+                await self.unprocessable_entity(send)
+                return
+
+            mean_result = calculate_mean(body)
             response_body = {"result": mean_result}
             await self.send_response(send, response_body)
 
