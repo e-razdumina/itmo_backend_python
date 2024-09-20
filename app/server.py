@@ -105,6 +105,19 @@ class ServerApp:
         except Exception as e:
             await self.internal_server_error(send, str(e))
 
+    async def get_request_body(self, receive: Callable) -> Any:
+        """Helper function to extract and parse JSON body from request."""
+        body = b""
+        more_body = True
+        while more_body:
+            message = await receive()
+            body += message.get("body", b"")
+            more_body = message.get("more_body", False)
+
+        if body:
+            return json.loads(body)
+        return None
+
     async def send_response(self, send: Callable, body: Dict[str, Any], status_code: int = 200) -> None:
         body_bytes = json.dumps(body).encode("utf-8")
         await send({
