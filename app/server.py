@@ -24,9 +24,11 @@ class ServerApp:
             params = parse_qs(query_string)
 
             if method in self.routes:
-                if path in self.routes[method]:
+                if path.startswith("/fibonacci"):
+                    await self.fibonacci(scope, params, receive, send)
+                elif path in self.routes[method]:
                     handler = self.routes[method][path]
-                    await handler(scope, params, receive, send)  # Pass 'receive'
+                    await handler(scope, params, receive, send)
                 else:
                     await self.not_found(send)
             else:
@@ -38,40 +40,39 @@ class ServerApp:
     async def factorial(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
             n = params.get("n", [None])[0]
-            if n is None:
-                raise ValueError("Missing 'n' parameter")
+            if n is None or not n.isdigit():
+                await self.unprocessable_entity(send)
+                return
             n = int(n)
             if n < 0:
-                raise ValueError("n must be a non-negative integer")
+                await self.bad_request(send)
+                return
             factorial_result = calculate_factorial(n)
             response_body = {"result": factorial_result}
             await self.send_response(send, response_body)
-        except ValueError:
-            await self.unprocessable_entity(send)
         except Exception:
             await self.internal_server_error(send)
 
     async def fibonacci(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
-            path = scope["path"]
-            n_str = path.split("/fibonacci/")[-1]
-            if not n_str.isdigit():
-                raise ValueError("Invalid path parameter 'n'")
+            n_str = params.get("n", [None])[0]
+            if n_str is None or not n_str.isdigit():
+                await self.unprocessable_entity(send)
+                return
             n = int(n_str)
             if n < 0:
-                raise ValueError("n must be a non-negative integer")
+                await self.bad_request(send)
+                return
 
             fibonacci_result = calculate_fibonacci(n)
             response_body = {"result": fibonacci_result}
             await self.send_response(send, response_body)
-        except ValueError:
-            await self.unprocessable_entity(send)
         except Exception:
             await self.internal_server_error(send)
 
     async def mean(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
-            body = await self.get_request_body(receive)  # Pass 'receive'
+            body = await self.get_request_body(receive)  # Read body from POST
             if not isinstance(body, list) or not all(isinstance(i, (float, int)) for i in body):
                 await self.unprocessable_entity(send)
                 return
