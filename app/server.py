@@ -72,20 +72,24 @@ class ServerApp:
 
     async def mean(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
-            body = await self.get_request_body(receive)  # Read body from POST
-            if not isinstance(body, list) or not all(isinstance(i, (float, int)) for i in body):
-                await self.unprocessable_entity(send)
+            numbers_str = params.get("numbers", [None])[0]
+            if numbers_str is None or numbers_str == "":
+                await self.unprocessable_entity(send)  # Missing or empty 'numbers'
                 return
 
-            if len(body) == 0:
+            numbers = list(map(float, numbers_str.split(',')))
+            if len(numbers) == 0:
                 await self.bad_request(send)
                 return
 
-            mean_result = calculate_mean(body)
+            mean_result = calculate_mean(numbers)
             response_body = {"result": mean_result}
             await self.send_response(send, response_body)
-        except Exception:
-            await self.internal_server_error(send)
+
+        except ValueError:
+            await self.unprocessable_entity(send)
+        except Exception as e:
+            await self.internal_server_error(send, str(e))
 
     async def get_request_body(self, receive: Callable) -> Any:
         body = b""

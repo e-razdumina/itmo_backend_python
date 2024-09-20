@@ -28,7 +28,6 @@ async def test_fibonacci_success(app):
 @pytest.mark.asyncio
 async def test_mean_success(app):
     async with AsyncClient(app=app, base_url="http://test") as client:
-        # Mean of [1, 2, 3, 4, 5] is 3.0
         response = await client.get("/mean?numbers=1,2,3,4,5")
         assert response.status_code == 200
         assert response.json() == {"result": 3.0}
