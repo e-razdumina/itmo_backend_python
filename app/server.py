@@ -32,7 +32,7 @@ class ServerApp:
                 else:
                     await self.not_found(send)
             else:
-                await self.method_not_allowed(send)
+                await self.not_found(send)
 
         except Exception as e:
             await self.internal_server_error(send, str(e))
@@ -55,8 +55,9 @@ class ServerApp:
 
     async def fibonacci(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
-            n_str = params.get("n", [None])[0]
-            if n_str is None or not n_str.isdigit():
+            path = scope["path"]
+            n_str = path.split("/fibonacci/")[-1]
+            if not n_str.isdigit():
                 await self.unprocessable_entity(send)
                 return
             n = int(n_str)
@@ -90,15 +91,6 @@ class ServerApp:
             await self.unprocessable_entity(send)
         except Exception as e:
             await self.internal_server_error(send, str(e))
-
-    async def get_request_body(self, receive: Callable) -> Any:
-        body = b""
-        more_body = True
-        while more_body:
-            message = await receive()
-            body += message.get("body", b"")
-            more_body = message.get("more_body", False)
-        return json.loads(body)
 
     async def send_response(self, send: Callable, body: Dict[str, Any], status_code: int = 200) -> None:
         body_bytes = json.dumps(body).encode("utf-8")
