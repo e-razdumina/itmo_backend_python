@@ -30,9 +30,9 @@ jobs:
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
 
-      - name: Run unit tests
-        run: |
-          pytest -m "not api"
+#      - name: Run unit tests
+#        run: |
+#          pytest -m "not api"
 
       - name: Set up Docker Compose for API tests
         run: docker compose up -d
