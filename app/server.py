@@ -1,5 +1,6 @@
 import json
-from typing import Any, Callable, Dict
+import re
+from typing import Any, Callable, Dict, List, Tuple
 from urllib.parse import parse_qs
 
 from .utils import calculate_factorial, calculate_fibonacci, calculate_mean
@@ -7,13 +8,11 @@ from .utils import calculate_factorial, calculate_fibonacci, calculate_mean
 
 class ServerApp:
     def __init__(self) -> None:
-        self.routes: Dict[str, Dict[str, Callable]] = {
-            "GET": {
-                "/factorial": self.factorial,
-                "/fibonacci": self.fibonacci,
-                "/mean": self.mean,
-            }
-        }
+        self.routes: List[Tuple[str, str, Callable]] = [
+            ("GET", r"^/factorial$", self.factorial),
+            ("GET", r"^/fibonacci/(\d+)$", self.fibonacci),
+            ("GET", r"^/mean$", self.mean),
+        ]
 
     async def __call__(self, scope: Dict[str, Any], receive: Callable, send: Callable) -> None:
         try:
@@ -23,15 +22,14 @@ class ServerApp:
             query_string = scope.get("query_string", b"").decode("utf-8")
             params = parse_qs(query_string)
 
-            if method in self.routes:
-                if path in self.routes[method]:
-                    handler = self.routes[method][path]
-                    await handler(scope, params, receive, send)
-                else:
-                    await self.not_found(send)
-            else:
-                await self.not_found(send)
-
+            for route_method, route_pattern, handler in self.routes:
+                if method == route_method:
+                    match = re.match(route_pattern, path)
+                    if match:
+                        path_params = match.groups()
+                        await handler(scope, params, path_params, receive, send)
+                        return
+            await self.not_found(send)
         except Exception as e:
             await self.internal_server_error(send, str(e))
 
@@ -57,10 +55,16 @@ class ServerApp:
         except Exception:
             await self.internal_server_error(send)
 
-    async def fibonacci(self, scope: Dict[str, Any], params: Dict[str, Any], receive: Callable, send: Callable) -> None:
+    async def fibonacci(
+        self,
+        scope: Dict[str, Any],
+        params: Dict[str, Any],
+        path_params: Tuple[str, ...],
+        receive: Callable,
+        send: Callable,
+    ) -> None:
         try:
-            path = scope["path"]
-            n_str = path.split("/fibonacci/")[-1]
+            n_str = path_params[0]
 
             try:
                 n = int(n_str)
@@ -97,7 +101,6 @@ class ServerApp:
             mean_result = calculate_mean(body)
             response_body = {"result": mean_result}
             await self.send_response(send, response_body)
-
         except ValueError:
             await self.unprocessable_entity(send)
         except Exception as e:
