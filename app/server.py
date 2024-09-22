@@ -24,9 +24,7 @@ class ServerApp:
             params = parse_qs(query_string)
 
             if method in self.routes:
-                if path.startswith("/fibonacci"):
-                    await self.fibonacci(scope, params, receive, send)
-                elif path in self.routes[method]:
+                if path in self.routes[method]:
                     handler = self.routes[method][path]
                     await handler(scope, params, receive, send)
                 else:
