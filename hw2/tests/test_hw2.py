@@ -16,7 +16,7 @@ def client():
     return httpx.Client(base_url=API_BASE_URL)
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def existing_empty_cart_id(client) -> int:
     return client.post("/cart").json()["id"]
 

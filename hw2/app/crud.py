@@ -18,8 +18,17 @@ def create_item(db: Session, item: schemas.ItemCreate):
 def update_item(db: Session, item_id: int, item: schemas.ItemCreate):
     db_item = db.query(models.Item).filter(models.Item.id == item_id).first()
     if db_item:
-        for key, value in item.dict().items():
-            setattr(db_item, key, value)
+        db_item.name = item.name
+        db_item.price = item.price
+        db.commit()
+        db.refresh(db_item)
+    return db_item
+
+
+def soft_delete_item(db: Session, item_id: int):
+    db_item = db.query(models.Item).filter(models.Item.id == item_id).first()
+    if db_item:
+        db_item.deleted = True  # Soft delete (mark as deleted)
         db.commit()
         db.refresh(db_item)
     return db_item
@@ -27,7 +36,7 @@ def update_item(db: Session, item_id: int, item: schemas.ItemCreate):
 
 # CRUD for Cart
 def create_cart(db: Session):
-    db_cart = models.Cart()
+    db_cart = models.Cart(price=0.0)
     db.add(db_cart)
     db.commit()
     db.refresh(db_cart)
