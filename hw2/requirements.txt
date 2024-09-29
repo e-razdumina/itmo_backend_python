@@ -1,5 +1,6 @@
 faker
 fastapi
+httpx
 uvicorn
 sqlalchemy
 psycopg2-binary
