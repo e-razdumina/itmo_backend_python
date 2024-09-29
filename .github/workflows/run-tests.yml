@@ -1,4 +1,4 @@
-name: Run Pytest
+name: HW1 Run Pytest
 
 on:
   push:
@@ -25,16 +25,17 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pytest
-          pip install -r requirements.txt
+          pip install -r hw1/requirements.txt
 
       - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/hw1" >> $GITHUB_ENV
 
       - name: Run unit tests
         run: |
-          pytest -m "not api"
+          pytest -m "not api" --rootdir=hw1
 
       - name: Set up Docker Compose for API tests
+        working-directory: hw1
         run: docker compose up -d
 
       - name: Wait for the app to be ready
@@ -46,7 +47,8 @@ jobs:
 
       - name: Run API tests
         run: |
-          pytest -m "api"
+          pytest -m "api" --rootdir=hw1
 
       - name: Tear down Docker Compose
+        working-directory: hw1
         run: docker compose down
