@@ -1,6 +1,6 @@
 import pytest
 
-from app.utils import calculate_factorial, calculate_fibonacci, calculate_mean
+from hw1.app.utils import calculate_factorial, calculate_fibonacci, calculate_mean
 
 
 def test_calculate_factorial():
