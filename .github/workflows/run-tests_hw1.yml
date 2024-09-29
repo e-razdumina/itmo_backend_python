@@ -32,7 +32,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          pytest -m "not api" --rootdir=hw1
+          pytest -m "not api" hw1/tests  
 
       - name: Set up Docker Compose for API tests
         working-directory: hw1
@@ -47,7 +47,7 @@ jobs:
 
       - name: Run API tests
         run: |
-          pytest -m "api" --rootdir=hw1
+          pytest -m "api" hw1/tests  
 
       - name: Tear down Docker Compose
         working-directory: hw1

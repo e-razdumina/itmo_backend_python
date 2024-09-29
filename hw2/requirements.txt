@@ -1,3 +1,4 @@
+faker
 fastapi
 uvicorn
 sqlalchemy

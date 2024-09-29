@@ -43,7 +43,7 @@ jobs:
 
       - name: Run API tests
         run: |
-          pytest -m --rootdir=hw2
+          pytest -m --rootdir=hw2 hw2/tests 
 
       - name: Tear down Docker Compose
         working-directory: hw2
