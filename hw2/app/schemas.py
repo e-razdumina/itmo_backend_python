@@ -30,12 +30,13 @@ class CartItemCreate(CartItemBase):
     pass
 
 
-class CartItem(CartItemBase):
+class CartItem(BaseModel):
     id: int
-    item: Item
+    item_id: int
+    quantity: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CartBase(BaseModel):
@@ -46,9 +47,10 @@ class CartCreate(CartBase):
     pass
 
 
-class Cart(CartBase):
+class Cart(BaseModel):
     id: int
     items: List[CartItem] = []
+    price: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True

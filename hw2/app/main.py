@@ -53,9 +53,11 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
 def create_cart(db: Session = Depends(get_db)):
     new_cart = crud.create_cart(db)
 
+    cart_data = schemas.Cart.from_orm(new_cart)
+
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
-        content=new_cart.dict(),
+        content=cart_data.dict(),
         headers={"Location": f"/cart/{new_cart.id}"}
     )
 
