@@ -107,7 +107,11 @@ def test_get_cart(request, client, cart: int, not_empty: bool) -> None:
 
         for item in response_json["items"]:
             item_id = item["id"]
-            price += client.get(f"/item/{item_id}").json()["price"] * item["quantity"]
+
+            item_response = client.get(f"/item/{item_id}")
+            print(f"Item {item_id} response: {item_response.json()}")
+
+            price += item_response.json()["price"] * item["quantity"]
 
         assert response_json["price"] == price
     else:
@@ -135,6 +139,11 @@ def test_get_cart(request, client, cart: int, not_empty: bool) -> None:
 def test_get_cart_list(client, query: dict[str, Any], status_code: int):
     response = client.get("/cart", params=query)
 
+    # Log the response in case of error
+    if response.status_code != status_code:
+        print(f"Error: Received {response.status_code} instead of {status_code}")
+        print(f"Response content: {response.content.decode()}")  # Log the response body
+
     assert response.status_code == status_code
 
     if status_code == HTTPStatus.OK:
@@ -143,10 +152,10 @@ def test_get_cart_list(client, query: dict[str, Any], status_code: int):
         assert isinstance(data, list)
 
         if "min_price" in query:
-            assert all(item["price"] >= query["min_price"] for item in data)
+            assert all(cart["price"] >= query["min_price"] for cart in data)
 
         if "max_price" in query:
-            assert all(item["price"] <= query["max_price"] for item in data)
+            assert all(cart["price"] <= query["max_price"] for cart in data)
 
         quantity = sum(
             sum(item["quantity"] for item in cart["items"]) for cart in data
@@ -157,6 +166,7 @@ def test_get_cart_list(client, query: dict[str, Any], status_code: int):
 
         if "max_quantity" in query:
             assert quantity <= query["max_quantity"]
+
 
 
 def test_post_item(client) -> None:

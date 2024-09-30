@@ -12,7 +12,7 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 
 
-@app.post("/item", response_model=schemas.Item)
+@app.post("/item", response_model=schemas.Item, status_code=status.HTTP_201_CREATED)
 def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
     return crud.create_item(db, item)
 
@@ -77,10 +77,10 @@ def list_carts(
     db: Session = Depends(get_db),
     offset: int = Query(0, ge=0),
     limit: int = Query(10, gt=0),
-    min_price: Optional[float] = None,
-    max_price: Optional[float] = None,
-    min_quantity: Optional[int] = None,
-    max_quantity: Optional[int] = None,
+    min_price: Optional[float] = Query(None, ge=0.0),
+    max_price: Optional[float] = Query(None, ge=0.0),
+    min_quantity: Optional[int] = Query(None, ge=0),
+    max_quantity: Optional[int] = Query(None, ge=0),
 ):
     return crud.get_carts(
         db, offset=offset, limit=limit,
