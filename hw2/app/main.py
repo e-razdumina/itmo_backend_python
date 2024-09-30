@@ -69,7 +69,7 @@ def read_cart(cart_id: int, db: Session = Depends(get_db)):
     db_cart = crud.get_cart(db, cart_id)
     if db_cart is None:
         raise HTTPException(status_code=404, detail="Cart not found")
-    return db_cart
+    return schemas.Cart.from_orm(db_cart)
 
 
 @app.get("/cart", response_model=List[schemas.Cart])

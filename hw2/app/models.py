@@ -21,12 +21,14 @@ class Cart(Base):
 
 
 class CartItem(Base):
-    __tablename__ = "cart_items"
+    __tablename__ = 'cart_items'
 
     id = Column(Integer, primary_key=True, index=True)
-    cart_id = Column(Integer, ForeignKey("carts.id"))
-    item_id = Column(Integer, ForeignKey("items.id"))
+    cart_id = Column(Integer, ForeignKey('carts.id'))
+    item_id = Column(Integer, ForeignKey('items.id'))
     quantity = Column(Integer, default=1)
+    price = Column(Float, nullable=False)
 
     cart = relationship("Cart", back_populates="items")
     item = relationship("Item")
+

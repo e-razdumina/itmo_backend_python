@@ -34,6 +34,7 @@ class CartItem(BaseModel):
     id: int
     item_id: int
     quantity: int
+    price: float
 
     class Config:
         from_attributes = True

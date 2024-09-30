@@ -54,7 +54,8 @@ def get_cart(db: Session, cart_id: int):
                 "id": cart_item.item.id,
                 "name": cart_item.item.name,
                 "quantity": cart_item.quantity,
-                "available": not cart_item.item.deleted
+                "available": not cart_item.item.deleted,
+                "price": cart_item.price
             }
             for cart_item in cart.items
         ]
@@ -69,12 +70,21 @@ def get_cart(db: Session, cart_id: int):
 def add_item_to_cart(db: Session, cart_id: int, item_id: int):
     cart = db.query(models.Cart).filter(models.Cart.id == cart_id).first()
     item = db.query(models.Item).filter(models.Item.id == item_id).first()
-    if cart and item:
-        cart_item = models.CartItem(cart_id=cart_id, item_id=item_id, quantity=1)
-        db.add(cart_item)
-        cart.price += item.price
-        db.commit()
-        db.refresh(cart)
+
+    cart_item = db.query(models.CartItem).filter(models.CartItem.cart_id == cart_id, models.CartItem.item_id == item_id).first()
+
+    if cart_item:
+        cart_item.quantity += 1
+    else:
+        new_cart_item = models.CartItem(cart_id=cart_id, item_id=item_id, quantity=1, price=item.price)
+        db.add(new_cart_item)
+        cart.items.append(new_cart_item)
+
+    cart.price = sum(cart_item.price * cart_item.quantity for cart_item in cart.items)
+
+    db.commit()
+    db.refresh(cart)
+
     return cart
 
 
