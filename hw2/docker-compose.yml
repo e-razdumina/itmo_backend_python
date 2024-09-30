@@ -29,7 +29,7 @@ services:
       "
     volumes:
       - .:/app
-    restart: always
+    restart: on-failure
     depends_on:
       - db
 
