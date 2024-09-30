@@ -105,7 +105,7 @@ def test_get_cart(request, client, cart: int, not_empty: bool) -> None:
     if not_empty:
         price = 0
 
-        for item in response_json["item"]:
+        for item in response_json["items"]:
             item_id = item["id"]
             price += client.get(f"/item/{item_id}").json()["price"] * item["quantity"]
 
