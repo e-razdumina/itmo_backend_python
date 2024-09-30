@@ -44,7 +44,23 @@ def create_cart(db: Session):
 
 
 def get_cart(db: Session, cart_id: int):
-    return db.query(models.Cart).filter(models.Cart.id == cart_id).first()
+    cart = db.query(models.Cart).filter(models.Cart.id == cart_id).first()
+    if cart:
+        items = [
+            {
+                "id": cart_item.item.id,
+                "name": cart_item.item.name,
+                "quantity": cart_item.quantity,
+                "available": not cart_item.item.deleted
+            }
+            for cart_item in cart.items
+        ]
+        return {
+            "id": cart.id,
+            "items": items,
+            "price": cart.price
+        }
+    return None
 
 
 def add_item_to_cart(db: Session, cart_id: int, item_id: int):

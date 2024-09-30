@@ -14,7 +14,7 @@ for _ in range(10):  # Retry 10 times
         break
     except OperationalError:
         print("Database not ready, retrying in 2 seconds...")
-        time.sleep(2)
+        time.sleep(30)
 else:
     raise Exception("Could not connect to the database after 10 retries.")
 
