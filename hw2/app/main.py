@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Query
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
