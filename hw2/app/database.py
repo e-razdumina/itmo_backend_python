@@ -8,7 +8,7 @@ from sqlalchemy.exc import OperationalError
 SQLALCHEMY_DATABASE_URL = "postgresql://myuser:mypassword@db/online_store"
 
 engine = None
-for _ in range(10):  # Retry 10 times
+for _ in range(100):  # Retry 10 times
     try:
         engine = create_engine(SQLALCHEMY_DATABASE_URL)
         break

@@ -106,10 +106,9 @@ def test_get_cart(request, client, cart: int, not_empty: bool) -> None:
         price = 0
 
         for item in response_json["items"]:
-            item_id = item["id"]
+            item_id = item["item_id"]
 
             item_response = client.get(f"/item/{item_id}")
-            print(f"Item {item_id} response: {item_response.json()}")
 
             price += item_response.json()["price"] * item["quantity"]
 
@@ -166,7 +165,6 @@ def test_get_cart_list(client, query: dict[str, Any], status_code: int):
 
         if "max_quantity" in query:
             assert quantity <= query["max_quantity"]
-
 
 
 def test_post_item(client) -> None:
