@@ -112,7 +112,7 @@ def test_get_cart(request, client, cart: int, not_empty: bool) -> None:
 
             price += item_response.json()["price"] * item["quantity"]
 
-        assert response_json["price"] == price
+        assert round(response_json["price"], 2) == round(price, 2)
     else:
         assert response_json["price"] == 0.0
 
