@@ -1,4 +1,7 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from . import models, schemas
 
 
@@ -73,3 +76,31 @@ def add_item_to_cart(db: Session, cart_id: int, item_id: int):
         db.commit()
         db.refresh(cart)
     return cart
+
+
+def get_cart(db: Session, cart_id: int):
+    return db.query(models.Cart).filter(models.Cart.id == cart_id).first()
+
+
+def get_carts(
+        db: Session,
+        offset: int = 0,
+        limit: int = 10,
+        min_price: Optional[float] = None,
+        max_price: Optional[float] = None,
+        min_quantity: Optional[int] = None,
+        max_quantity: Optional[int] = None,
+):
+    query = db.query(models.Cart)
+
+    if min_price is not None:
+        query = query.filter(models.Cart.price >= min_price)
+    if max_price is not None:
+        query = query.filter(models.Cart.price <= max_price)
+
+    if min_quantity is not None:
+        query = query.having(func.sum(models.CartItem.quantity) >= min_quantity)
+    if max_quantity is not None:
+        query = query.having(func.sum(models.CartItem.quantity) <= max_quantity)
+
+    return query.offset(offset).limit(limit).all()
