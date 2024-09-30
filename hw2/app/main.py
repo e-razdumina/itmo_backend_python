@@ -20,9 +20,11 @@ def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
 @app.get("/item/{item_id}", response_model=schemas.Item)
 def read_item(item_id: int, db: Session = Depends(get_db)):
     db_item = crud.get_item(db, item_id)
-    if db_item is None:
+
+    if db_item is None or db_item.deleted:
         raise HTTPException(status_code=404, detail="Item not found")
-    return db_item
+
+    return schemas.Item.from_orm(db_item)
 
 
 @app.put("/item/{item_id}", response_model=schemas.Item)
