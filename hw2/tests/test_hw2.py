@@ -1,14 +1,18 @@
 from http import HTTPStatus
 from typing import Any
 from uuid import uuid4
+import websockets
+import asyncio
 
 import pytest
 from faker import Faker
 import httpx
+import re
 
 faker = Faker()
 
 API_BASE_URL = "http://localhost:8000"
+CHAT_BASE_URL = "ws://localhost:8000/chat"
 
 
 @pytest.fixture(scope="session")
@@ -278,3 +282,81 @@ def test_delete_item(client, existing_item: dict[str, Any]) -> None:
 
     response = client.delete(f"/item/{item_id}")
     assert response.status_code == HTTPStatus.OK
+
+
+@pytest.mark.asyncio
+async def test_chat_room():
+    chat_room_name = "room1"
+
+    # Regular expression to match the format "{username} :: {message}"
+    message_pattern = re.compile(r"(\w+) :: (.+)")
+
+    # Connect two users to the same chat room
+    async with websockets.connect(f"{CHAT_BASE_URL}/{chat_room_name}") as ws_user1, \
+            websockets.connect(f"{CHAT_BASE_URL}/{chat_room_name}") as ws_user2:
+
+        # User 1 sends a message
+        await ws_user1.send("Hello from user 1")
+
+        # Both users should receive the message
+        received_message_1 = await ws_user1.recv()
+        received_message_2 = await ws_user2.recv()
+
+        # Check if the message format is correct for both users
+        for received_message in [received_message_1, received_message_2]:
+            match = message_pattern.match(received_message)
+            assert match is not None, f"Message format is incorrect: {received_message}"
+
+            username, message = match.groups()
+            assert message == "Hello from user 1", f"Expected 'Hello from user 1', got '{message}'"
+
+        # User 2 sends a message
+        await ws_user2.send("Hello from user 2")
+
+        # Both users should receive the message
+        received_message_1 = await ws_user1.recv()
+        received_message_2 = await ws_user2.recv()
+
+        # Check if the message format is correct for both users
+        for received_message in [received_message_1, received_message_2]:
+            match = message_pattern.match(received_message)
+            assert match is not None, f"Message format is incorrect: {received_message}"
+
+            username, message = match.groups()
+            assert message == "Hello from user 2", f"Expected 'Hello from user 2', got '{message}'"
+
+
+@pytest.mark.asyncio
+async def test_chat_room_isolated():
+    # Two users in different rooms shouldn't receive each other's messages
+    async with websockets.connect(f"{CHAT_BASE_URL}/roomA") as ws_user1, \
+            websockets.connect(f"{CHAT_BASE_URL}/roomB") as ws_user2:
+
+        # User 1 sends a message in room A
+        await ws_user1.send("Message from user 1 in room A")
+
+        # User 2 sends a message in room B
+        await ws_user2.send("Message from user 2 in room B")
+
+        # Try to receive from user1's WebSocket and expect a timeout
+        try:
+            user1_received = await asyncio.wait_for(ws_user1.recv(), timeout=1)
+            print(f"User 1 received: {user1_received}")
+
+        except asyncio.TimeoutError:
+            print("User 1 did not receive a message, as expected")
+
+        # Try to receive from user2's WebSocket and expect a timeout
+        try:
+            user2_received = await asyncio.wait_for(ws_user2.recv(), timeout=1)
+            print(f"User 2 received: {user2_received}")
+        except asyncio.TimeoutError:
+            print("User 2 did not receive a message, as expected")
+
+        # Ensure User 1 did not receive User 2's message
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(ws_user1.recv(), timeout=1)
+
+        # Ensure User 2 did not receive User 1's message
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(ws_user2.recv(), timeout=1)

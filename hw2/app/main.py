@@ -1,5 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Query
+from fastapi import FastAPI, Depends, HTTPException, status, Query, WebSocket
 from fastapi.responses import JSONResponse
+from fastapi import FastAPI
+from .chat import websocket_endpoint
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -133,6 +135,11 @@ def list_carts(
 @app.post("/cart/{cart_id}/add/{item_id}", response_model=schemas.Cart)
 def add_item_to_cart(cart_id: int, item_id: int, db: Session = Depends(get_db)):
     return crud.add_item_to_cart(db, cart_id, item_id)
+
+
+@app.websocket("/chat/{chat_name}")
+async def websocket_chat(websocket: WebSocket, chat_name: str):
+    await websocket_endpoint(websocket, chat_name)
 
 
 if __name__ == "__main__":
