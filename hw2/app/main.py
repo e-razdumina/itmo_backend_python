@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Query, WebSocket
 from fastapi.responses import JSONResponse
-from fastapi import FastAPI
 from .chat import websocket_endpoint
 from sqlalchemy.orm import Session
 from typing import List, Optional
