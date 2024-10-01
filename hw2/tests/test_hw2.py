@@ -107,12 +107,9 @@ def test_get_cart(request, client, cart: int, not_empty: bool) -> None:
 
         for item in response_json["items"]:
             item_id = item["item_id"]
+            price += client.get(f"/item/{item_id}").json()["price"] * item["quantity"]
 
-            item_response = client.get(f"/item/{item_id}")
-
-            price += item_response.json()["price"] * item["quantity"]
-
-        assert round(response_json["price"], 2) == round(price, 2)
+        assert response_json["price"] == pytest.approx(price, 1e-8)
     else:
         assert response_json["price"] == 0.0
 
@@ -138,11 +135,6 @@ def test_get_cart(request, client, cart: int, not_empty: bool) -> None:
 def test_get_cart_list(client, query: dict[str, Any], status_code: int):
     response = client.get("/cart", params=query)
 
-    # Log the response in case of error
-    if response.status_code != status_code:
-        print(f"Error: Received {response.status_code} instead of {status_code}")
-        print(f"Response content: {response.content.decode()}")  # Log the response body
-
     assert response.status_code == status_code
 
     if status_code == HTTPStatus.OK:
@@ -151,10 +143,10 @@ def test_get_cart_list(client, query: dict[str, Any], status_code: int):
         assert isinstance(data, list)
 
         if "min_price" in query:
-            assert all(cart["price"] >= query["min_price"] for cart in data)
+            assert all(item["price"] >= query["min_price"] for item in data)
 
         if "max_price" in query:
-            assert all(cart["price"] <= query["max_price"] for cart in data)
+            assert all(item["price"] <= query["max_price"] for item in data)
 
         quantity = sum(
             sum(item["quantity"] for item in cart["items"]) for cart in data
@@ -187,17 +179,35 @@ def test_get_item(client, existing_item: dict[str, Any]) -> None:
     assert response.json() == existing_item
 
 
-def test_get_item_list(client) -> None:
-    response = client.get("/item")
-    assert response.status_code == HTTPStatus.OK
+@pytest.mark.parametrize(
+    ("query", "status_code"),
+    [
+        ({"offset": 2, "limit": 5}, HTTPStatus.OK),
+        ({"min_price": 5.0}, HTTPStatus.OK),
+        ({"max_price": 100.0}, HTTPStatus.OK),
+        ({"show_deleted": True}, HTTPStatus.OK),
+        ({"offset": -1}, HTTPStatus.UNPROCESSABLE_ENTITY),
+        ({"limit": -1}, HTTPStatus.UNPROCESSABLE_ENTITY),
+        ({"limit": 0}, HTTPStatus.UNPROCESSABLE_ENTITY),
+        ({"min_price": -1}, HTTPStatus.UNPROCESSABLE_ENTITY),
+        ({"max_price": -1}, HTTPStatus.UNPROCESSABLE_ENTITY),
+    ],
+)
+def test_get_item_list(client, query: dict[str, Any], status_code: int) -> None:
+    response = client.get("/item", params=query)
 
-    data = response.json()
-    assert isinstance(data, list)
-    for item in data:
-        assert "id" in item
-        assert "name" in item
-        assert "price" in item
-        assert "deleted" in item
+    assert response.status_code == status_code
+
+    if status_code == HTTPStatus.OK:
+        data = response.json()
+
+        assert isinstance(data, list)
+
+        if "min_price" in query:
+            assert all(item["price"] >= query["min_price"] for item in data)
+
+        if "max_price" in query:
+            assert all(item["price"] <= query["max_price"] for item in data)
 
 
 @pytest.mark.parametrize(
@@ -230,9 +240,14 @@ def test_put_item(client, existing_item: dict[str, Any], body: dict[str, Any], s
         ("existing_item", {"price": 9.99}, HTTPStatus.OK),
         ("existing_item", {"name": "new name", "price": 9.99}, HTTPStatus.OK),
         (
-            "existing_item",
-            {"name": "new name", "price": 9.99, "odd": "value"},
-            HTTPStatus.UNPROCESSABLE_ENTITY,
+                "existing_item",
+                {"name": "new name", "price": 9.99, "odd": "value"},
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+        ),
+        (
+                "existing_item",
+                {"name": "new name", "price": 9.99, "deleted": True},
+                HTTPStatus.UNPROCESSABLE_ENTITY,
         ),
     ],
 )
