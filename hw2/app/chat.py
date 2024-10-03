@@ -22,8 +22,13 @@ class ConnectionManager:
         self.active_connections.remove(websocket)
 
     async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
+        for connection in self.active_connections.copy():
+            try:
+                await connection.send_text(message)
+            except RuntimeError as e:
+                if "Cannot call 'send'" in str(e):
+                    self.disconnect(connection)
+                    continue
 
 
 async def websocket_endpoint(websocket: WebSocket, chat_name: str):
@@ -44,3 +49,6 @@ async def websocket_endpoint(websocket: WebSocket, chat_name: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         await manager.broadcast(f"{username} has left the chat")
+
+        if len(manager.active_connections) == 0:
+            del chat_rooms[chat_name]

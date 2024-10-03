@@ -1,15 +1,54 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Query, WebSocket
 from fastapi.responses import JSONResponse
-from .chat import websocket_endpoint
 from sqlalchemy.orm import Session
 from typing import List, Optional
-
+from prometheus_fastapi_instrumentator import Instrumentator, metrics
+import psutil
+from prometheus_client import Gauge
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from .chat import websocket_endpoint
 from . import schemas, crud
 from .database import engine, Base, get_db
+
 
 # Create a FastAPI instance and initialize the database
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
+
+# Instrument the app with Prometheus metrics
+instrumentator = Instrumentator()
+instrumentator.instrument(app).expose(app, endpoint="/metrics")
+
+# System-level metrics
+cpu_usage_gauge = Gauge('system_cpu_usage_percent', 'CPU usage percent')
+memory_usage_gauge = Gauge('system_memory_usage_percent', 'Memory usage percent')
+disk_usage_gauge = Gauge('system_disk_usage_percent', 'Disk usage percent')
+network_io_gauge = Gauge('system_network_io_bytes', 'Network I/O bytes')
+
+
+# Function to update system-level metrics
+def update_system_metrics():
+    cpu_usage_gauge.set(psutil.cpu_percent(interval=1))
+    memory_usage_gauge.set(psutil.virtual_memory().percent)
+    disk_usage_gauge.set(psutil.disk_usage('/').percent)
+    network_io = psutil.net_io_counters()
+    network_io_gauge.set(network_io.bytes_sent + network_io.bytes_recv)
+
+
+# APScheduler for periodic task scheduling
+scheduler = AsyncIOScheduler()
+
+
+@app.on_event("startup")
+async def start_scheduler():
+    scheduler.start()
+    # Schedule the system metrics update every 5 seconds
+    scheduler.add_job(update_system_metrics, "interval", seconds=5)
+
+
+@app.on_event("shutdown")
+async def shutdown_scheduler():
+    scheduler.shutdown()
 
 
 # Item Endpoints
