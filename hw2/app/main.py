@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, Query, WebSocket
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from prometheus_fastapi_instrumentator import Instrumentator, metrics
+from prometheus_fastapi_instrumentator import Instrumentator
 import psutil
 from prometheus_client import Gauge
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
