@@ -360,3 +360,18 @@ async def test_chat_room_isolated():
         # Ensure User 2 did not receive User 1's message
         with pytest.raises(asyncio.TimeoutError):
             await asyncio.wait_for(ws_user2.recv(), timeout=1)
+
+
+@pytest.mark.asyncio
+async def test_high_load_cart_requests():
+    async with httpx.AsyncClient(base_url=API_BASE_URL) as client:
+        tasks = []
+        # Simulate 100 concurrent POST requests to create carts
+        for _ in range(100):
+            tasks.append(client.post("/cart"))
+
+        # Await all the requests
+        responses = await asyncio.gather(*tasks)
+
+        # Check that all responses are successful
+        assert all(response.status_code == 201 for response in responses)

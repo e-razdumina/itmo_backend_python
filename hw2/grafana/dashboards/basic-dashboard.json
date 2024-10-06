@@ -1,0 +1,135 @@
+{
+  "id": null,
+  "title": "FastAPI Monitoring Dashboard",
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "CPU Usage",
+      "targets": [
+        {
+          "expr": "system_cpu_usage_percent",
+          "legendFormat": "CPU Usage",
+          "refId": "A"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Memory Usage",
+      "targets": [
+        {
+          "expr": "system_memory_usage_percent",
+          "legendFormat": "Memory Usage",
+          "refId": "B"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Disk Usage",
+      "targets": [
+        {
+          "expr": "system_disk_usage_percent",
+          "legendFormat": "Disk Usage",
+          "refId": "C"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Network I/O",
+      "targets": [
+        {
+          "expr": "system_network_io_bytes",
+          "legendFormat": "Network I/O",
+          "refId": "D"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      }
+    },
+    {
+      "type": "graph",
+      "title": "HTTP Requests",
+      "targets": [
+        {
+          "expr": "http_requests_total",
+          "legendFormat": "{{method}} {{endpoint}}",
+          "refId": "E"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Active WebSocket Connections",
+      "targets": [
+        {
+          "expr": "websocket_active_connections",
+          "legendFormat": "Active WebSocket Connections",
+          "refId": "F"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      }
+    },
+    {
+      "type": "graph",
+      "title": "WebSocket Message Count",
+      "targets": [
+        {
+          "expr": "websocket_message_count",
+          "legendFormat": "WebSocket Message Count",
+          "refId": "G"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      }
+    }
+  ],
+  "schemaVersion": 27,
+  "version": 1
+}

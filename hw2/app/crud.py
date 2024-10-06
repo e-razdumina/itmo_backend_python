@@ -2,37 +2,72 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from . import models, schemas
+from prometheus_client import Counter, Histogram
+import time
+
+# Prometheus Metrics
+query_counter = Counter('db_queries_total', 'Total number of database queries', ['operation'])
+query_duration_histogram = Histogram('db_query_duration_seconds', 'Histogram of query durations', ['operation'])
 
 
 # CRUD for Item
 def get_item(db: Session, item_id: int) -> Optional[models.Item]:
-    return db.query(models.Item).filter(models.Item.id == item_id).first()
+    query_counter.labels(operation="get_item").inc()
+    start_time = time.time()
+
+    item = db.query(models.Item).filter(models.Item.id == item_id).first()
+
+    duration = time.time() - start_time
+    query_duration_histogram.labels(operation="get_item").observe(duration)
+
+    return item
 
 
 def create_item(db: Session, item: schemas.ItemCreate) -> models.Item:
+    query_counter.labels(operation="create_item").inc()
+    start_time = time.time()
+
     db_item = models.Item(**item.dict())
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
+
+    duration = time.time() - start_time
+    query_duration_histogram.labels(operation="create_item").observe(duration)
+
     return db_item
 
 
 def update_item(db: Session, item_id: int, item: schemas.ItemCreate) -> Optional[models.Item]:
+    query_counter.labels(operation="update_item").inc()
+    start_time = time.time()
+
     db_item = db.query(models.Item).filter(models.Item.id == item_id).first()
     if db_item:
         db_item.name = item.name
         db_item.price = item.price
         db.commit()
         db.refresh(db_item)
+
+    duration = time.time() - start_time
+    query_duration_histogram.labels(operation="update_item").observe(duration)
+
     return db_item
 
 
 def soft_delete_item(db: Session, item_id: int) -> Optional[models.Item]:
+    query_counter.labels(operation="soft_delete_item").inc()
+    start_time = time.time()
+
     db_item = db.query(models.Item).filter(models.Item.id == item_id).first()
     if db_item:
         db_item.deleted = True
         db.commit()
         db.refresh(db_item)
+
+    duration = time.time() - start_time
+    query_duration_histogram.labels(operation="soft_delete_item").observe(duration)
+
     return db_item
 
 
@@ -44,6 +79,9 @@ def get_items(
         max_price: Optional[float] = None,
         show_deleted: bool = False,
 ) -> List[models.Item]:
+    query_counter.labels(operation="get_items").inc()
+    start_time = time.time()
+
     query = db.query(models.Item)
 
     if min_price is not None:
@@ -54,23 +92,46 @@ def get_items(
     if not show_deleted:
         query = query.filter(models.Item.deleted.is_(False))
 
-    return query.offset(offset).limit(limit).all()
+    items = query.offset(offset).limit(limit).all()
+
+    duration = time.time() - start_time
+    query_duration_histogram.labels(operation="get_items").observe(duration)
+
+    return items
 
 
 # CRUD for Cart
 def create_cart(db: Session) -> models.Cart:
+    query_counter.labels(operation="create_cart").inc()
+    start_time = time.time()
+
     db_cart = models.Cart(price=0.0)
     db.add(db_cart)
     db.commit()
     db.refresh(db_cart)
+
+    duration = time.time() - start_time
+    query_duration_histogram.labels(operation="create_cart").observe(duration)
+
     return db_cart
 
 
 def get_cart(db: Session, cart_id: int) -> Optional[models.Cart]:
-    return db.query(models.Cart).filter(models.Cart.id == cart_id).first()
+    query_counter.labels(operation="get_cart").inc()
+    start_time = time.time()
+
+    cart = db.query(models.Cart).filter(models.Cart.id == cart_id).first()
+
+    duration = time.time() - start_time
+    query_duration_histogram.labels(operation="get_cart").observe(duration)
+
+    return cart
 
 
 def add_item_to_cart(db: Session, cart_id: int, item_id: int, quantity: int = 1) -> Optional[models.Cart]:
+    query_counter.labels(operation="add_item_to_cart").inc()
+    start_time = time.time()
+
     cart = db.query(models.Cart).filter(models.Cart.id == cart_id).first()
     item = db.query(models.Item).filter(models.Item.id == item_id).first()
 
@@ -85,6 +146,9 @@ def add_item_to_cart(db: Session, cart_id: int, item_id: int, quantity: int = 1)
         db.commit()
         db.refresh(cart)
 
+    duration = time.time() - start_time
+    query_duration_histogram.labels(operation="add_item_to_cart").observe(duration)
+
     return cart
 
 
@@ -97,6 +161,9 @@ def get_carts(
         min_quantity: Optional[int] = None,
         max_quantity: Optional[int] = None,
 ) -> List[models.Cart]:
+    query_counter.labels(operation="get_carts").inc()
+    start_time = time.time()
+
     query = db.query(models.Cart).join(models.CartItem)
 
     # Apply price filters
@@ -113,4 +180,9 @@ def get_carts(
     if max_quantity is not None:
         query = query.having(func.sum(models.CartItem.quantity) <= max_quantity)
 
-    return query.offset(offset).limit(limit).all()
+    carts = query.offset(offset).limit(limit).all()
+
+    duration = time.time() - start_time
+    query_duration_histogram.labels(operation="get_carts").observe(duration)
+
+    return carts
