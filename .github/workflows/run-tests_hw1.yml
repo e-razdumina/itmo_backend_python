@@ -1,0 +1,54 @@
+name: HW1 Run Pytest
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install -r hw1/requirements.txt
+
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/hw1" >> $GITHUB_ENV
+
+      - name: Run unit tests
+        run: |
+          pytest -m "not api" hw1/tests  
+
+      - name: Set up Docker Compose for API tests
+        working-directory: hw1
+        run: docker compose up -d
+
+      - name: Wait for the app to be ready
+        run: |
+          until curl --silent http://localhost:8000/; do
+            echo "Waiting for app to be ready..."
+            sleep 2
+          done
+
+      - name: Run API tests
+        run: |
+          pytest -m "api" hw1/tests  
+
+      - name: Tear down Docker Compose
+        working-directory: hw1
+        run: docker compose down
