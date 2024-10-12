@@ -1,10 +1,5 @@
 from locust import HttpUser, task, between, events
-from uuid import uuid4
 from faker import Faker
-import websockets
-import asyncio
-import json
-import httpx
 
 faker = Faker()
 API_BASE_URL = "http://localhost:8000"
@@ -18,7 +13,7 @@ class FastAPIUser(HttpUser):
         # Create a new cart
         response = self.client.post("/cart")
         if response.status_code == 201:
-            cart_id = response.json()["id"]
+            print(response.json()["id"])
 
     @task
     def add_items_to_cart(self):
@@ -38,7 +33,7 @@ class FastAPIUser(HttpUser):
         # Retrieve a list of carts
         response = self.client.get("/cart", params={"offset": 0, "limit": 5})
         if response.status_code == 200:
-            carts = response.json()
+            print(response.json())
 
     @task
     def get_items(self):
