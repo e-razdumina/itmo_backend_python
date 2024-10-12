@@ -1,8 +1,8 @@
 import pytest
 from datetime import datetime
 from pydantic import SecretStr
-from hw4.demo_service.api.contracts import RegisterUserRequest, UserResponse
-from hw4.demo_service.core.users import UserInfo, UserEntity, UserRole
+from demo_service.api.contracts import RegisterUserRequest, UserResponse
+from demo_service.core.users import UserInfo, UserEntity, UserRole
 
 
 def test_register_user_request():

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from hw4.demo_service.api import users, utils
+from demo_service.api import users, utils
 
 
 def create_app():

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, SecretStr
 
-from hw4.demo_service.core.users import UserEntity, UserRole
+from demo_service.core.users import UserEntity, UserRole
 
 
 class RegisterUserRequest(BaseModel):

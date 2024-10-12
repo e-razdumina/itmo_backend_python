@@ -43,7 +43,7 @@ jobs:
 
       - name: Run API tests
         run: |
-          pytest hw4/tests
+          pytest hw4/tests --cov=hw4 --cov-report=term-missing
 
       - name: Tear down Docker Compose
         working-directory: hw4

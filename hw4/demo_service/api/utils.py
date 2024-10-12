@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
-from hw4.demo_service.core.users import (
+from demo_service.core.users import (
     UserEntity,
     UserInfo,
     UserRole,
