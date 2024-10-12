@@ -1,11 +1,12 @@
 from fastapi.testclient import TestClient
 from demo_service.api.main import create_app
-from http import HTTPStatus
 import pytest
 import uuid
 from demo_service.core.users import UserService, UserInfo, UserRole, password_is_longer_than_8
 from pydantic import SecretStr
 from datetime import datetime
+from http import HTTPStatus
+
 
 # Create the FastAPI app
 app = create_app()
@@ -86,10 +87,6 @@ def test_get_user_not_found(admin_credentials):
         response = client.post("/user-get", auth=(admin_credentials["username"], admin_credentials["password"]),
                                params={"id": 9999})
         assert response.status_code == HTTPStatus.NOT_FOUND
-
-
-import pytest
-from http import HTTPStatus
 
 
 @pytest.mark.parametrize("credentials_fixture, expected_status", [
