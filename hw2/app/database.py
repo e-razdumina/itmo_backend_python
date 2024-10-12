@@ -8,9 +8,18 @@ from sqlalchemy.exc import OperationalError
 SQLALCHEMY_DATABASE_URL = "postgresql://myuser:mypassword@db/online_store"
 
 engine = None
-for _ in range(100):  # Retry 10 times
+retry_attempts = 10
+
+for attempt in range(retry_attempts):
     try:
-        engine = create_engine(SQLALCHEMY_DATABASE_URL)
+        engine = create_engine(
+            SQLALCHEMY_DATABASE_URL,
+            pool_size=50,
+            max_overflow=20,
+            pool_timeout=30,
+            pool_recycle=1800,
+            pool_pre_ping=True
+        )
         break
     except OperationalError:
         print("Database not ready, retrying in 2 seconds...")

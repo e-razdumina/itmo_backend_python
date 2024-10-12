@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from prometheus_fastapi_instrumentator import Instrumentator
 import psutil
-from prometheus_client import Gauge
+from prometheus_client import Gauge, Counter, Histogram
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from .chat import websocket_endpoint
 from . import schemas, crud
@@ -25,6 +25,15 @@ memory_usage_gauge = Gauge('system_memory_usage_percent', 'Memory usage percent'
 disk_usage_gauge = Gauge('system_disk_usage_percent', 'Disk usage percent')
 network_io_gauge = Gauge('system_network_io_bytes', 'Network I/O bytes')
 
+# HTTP metrics
+http_requests_total = Counter('http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'status'])
+request_duration_histogram = Histogram('http_request_duration_seconds', 'Request duration in seconds',
+                                       ['method', 'endpoint'])
+
+# Success rate and RPS metrics
+successful_requests_total = Counter('successful_http_requests_total', 'Total successful (2xx) HTTP requests',
+                                    ['method', 'endpoint'])
+
 
 # Function to update system-level metrics
 def update_system_metrics():
@@ -33,6 +42,25 @@ def update_system_metrics():
     disk_usage_gauge.set(psutil.disk_usage('/').percent)
     network_io = psutil.net_io_counters()
     network_io_gauge.set(network_io.bytes_sent + network_io.bytes_recv)
+
+
+@app.middleware("http")
+async def add_metrics_middleware(request, call_next):
+    method = request.method
+    endpoint = request.url.path
+
+    # Start measuring request duration
+    with request_duration_histogram.labels(method, endpoint).time():
+        response = await call_next(request)
+
+    # Increment the total requests counter
+    http_requests_total.labels(method, endpoint, response.status_code).inc()
+
+    # Increment successful requests (2xx) counter
+    if 200 <= response.status_code < 300:
+        successful_requests_total.labels(method, endpoint).inc()
+
+    return response
 
 
 # APScheduler for periodic task scheduling
