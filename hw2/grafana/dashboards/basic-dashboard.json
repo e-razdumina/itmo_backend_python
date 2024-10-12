@@ -128,6 +128,78 @@
         "x": 12,
         "y": 27
       }
+    },
+    {
+      "type": "graph",
+      "title": "Request Per Second (RPS)",
+      "targets": [
+        {
+          "expr": "rate(http_requests_total[1m])",
+          "legendFormat": "RPS",
+          "refId": "H"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 36
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Success Rate (2xx Responses)",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~'2..'}[1m])) / sum(rate(http_requests_total[1m]))",
+          "legendFormat": "Success Rate",
+          "refId": "I"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 36
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Latency (P95)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "P95 Latency",
+          "refId": "J"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 45
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Latency (P99)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "P99 Latency",
+          "refId": "K"
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 45
+      }
     }
   ],
   "schemaVersion": 27,
